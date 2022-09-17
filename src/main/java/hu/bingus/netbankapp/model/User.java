@@ -1,14 +1,19 @@
 package hu.bingus.netbankapp.model;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Required;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+
 @Table(name = "users")
 @Entity
+@Data
 public class User {
 
     @Id

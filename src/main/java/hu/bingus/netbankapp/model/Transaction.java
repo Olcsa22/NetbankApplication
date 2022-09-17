@@ -1,6 +1,9 @@
 package hu.bingus.netbankapp.model;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -8,9 +11,9 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.sql.Timestamp;
 
-@Data
 @Table(name = "transactions")
 @Entity
+@Data
 public class Transaction {
 
     @Id
