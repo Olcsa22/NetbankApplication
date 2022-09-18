@@ -22,6 +22,6 @@ public class Account {
     @Column(name = "balance")
     private Long balance;
 
-    @Column(name = "userId")
+    @Column(name = "user_id")
     private Long userId;
 }
