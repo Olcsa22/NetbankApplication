@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.bingus.netbankapp.model.Account;
 import hu.bingus.netbankapp.model.Transaction;
+import hu.bingus.netbankapp.model.User;
 import hu.bingus.netbankapp.util.AbstractCriteriaService;
 import hu.bingus.netbankapp.util.ContextProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.util.AbstractMap;
 import java.util.Calendar;
@@ -16,11 +18,10 @@ import java.util.Calendar;
 @Service("TransactionService")
 public class TransactionServiceImpl extends AbstractCriteriaService<Transaction> implements TransactionService {
 
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TransactionServiceImpl(ObjectMapper mapper) {
+    public TransactionServiceImpl() {
         super(Transaction.class);
-        this.objectMapper=mapper;
     }
 
     public AbstractMap.SimpleEntry<JsonNode, HttpStatus> createTransaction(Transaction transaction){
@@ -71,6 +72,24 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
             JsonNode node = objectMapper.createObjectNode().put("reason", "Hiba a tranzakció sztornózásakor. Nem létező tranzakció.");
             return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public AbstractMap.SimpleEntry<JsonNode, HttpStatus> stornoTransactionClient(Long id, Principal principal) {
+        Transaction transaction = super.findById(id);
+        if(transaction!=null){
+            Account account = ContextProvider.getBean(AccountServiceImpl.class).findById(transaction.getSourceAccountId());
+            User user = ContextProvider.getBean(UserServiceImpl.class).findByUsername(principal.getName());
+            if(user.getId() != account.getUserId()){
+                JsonNode node = objectMapper.createObjectNode().put("reason","Nem a felhasználóhóz tartozó tranzakció");
+                return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+            }else{
+                return stornoTransaction(id);
+            }
+        }else{
+            JsonNode node = objectMapper.createObjectNode().put("reason","Nem található tranzakció");
+            return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+        }
+
     }
 
 }

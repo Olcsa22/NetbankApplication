@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -25,6 +27,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@Transactional
+@EnableTransactionManagement
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final SessionFactory sessionFactory;
@@ -40,11 +44,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         cr.where(cb.equal(root.get("username"),username));
 
         Query<User> query = session.createQuery(cr);
-        Optional<List<User>> results = Optional.ofNullable(query.getResultList());
+        User result = query.getSingleResult();
 
 
-        if(results.isPresent()) {
-            return new UserDetailsImpl(results.get().get(0));
+        if(result!=null) {
+            return new UserDetailsImpl(result);
         }
         else {
             log.error("Nem található felhasználó");

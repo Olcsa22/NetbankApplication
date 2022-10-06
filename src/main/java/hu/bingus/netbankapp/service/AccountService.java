@@ -10,6 +10,6 @@ public interface AccountService {
 
     AbstractMap.SimpleEntry<JsonNode, HttpStatus> addAccount(Account account);
 
-    AbstractMap.SimpleEntry<JsonNode, HttpStatus> deleteAccountById(Long id);
+    AbstractMap.SimpleEntry<JsonNode, HttpStatus> deleteAccountByIdAdmin(Long id);
 
 }

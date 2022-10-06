@@ -12,7 +12,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.security.Principal;
 import java.util.AbstractMap;
 
 @Controller
@@ -31,8 +33,15 @@ public class TransactionController {
     }
 
 
-    public ResponseEntity stornoTransaction(@RequestBody Long id){
+    @RequestMapping(value = "/stornoTransactionAdmin", method = RequestMethod.DELETE, produces = "application/json")
+    public ResponseEntity stornoTransactionAdmin(@RequestParam Long id){
         AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = transactionService.stornoTransaction(id);
+        return new ResponseEntity(response.getKey(),response.getValue());
+    }
+
+    @RequestMapping(value = "/stornoTransactionClient", method = RequestMethod.DELETE, produces = "application/json")
+    public ResponseEntity stornoTransactionClient(@RequestParam Long id, Principal principal){
+        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = transactionService.stornoTransactionClient(id, principal);
         return new ResponseEntity(response.getKey(),response.getValue());
     }
 

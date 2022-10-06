@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.AbstractMap;
 
-@Controller(value = "/")
+@Controller
+@RequestMapping(value = "/")
 @RequiredArgsConstructor
+@PreAuthorize("denyall")
 public class UserController {
 
     private final UserServiceImpl userService;
@@ -34,10 +36,12 @@ public class UserController {
         return new ResponseEntity(objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(response.getKey()),response.getValue());
     }
 
-    @PreAuthorize("hasRole(ROLE_ADMIN)")
+
     @RequestMapping(value = "/makeAdmin", produces = "application/json",method = RequestMethod.POST)
-    public void makeAdmin(String username){
-        roleService.addAdmin(username);
+    public ResponseEntity makeAdmin(String username){
+
+        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = roleService.addAdmin(username);
+        return new ResponseEntity<>(response.getKey(),response.getValue());
     }
 
 }
