@@ -21,7 +21,7 @@ import java.util.AbstractMap;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserServiceImpl homeService;
+    private final UserServiceImpl userService;
 
     private final RoleServiceImpl roleService;
 
@@ -29,7 +29,7 @@ public class UserController {
 
     @RequestMapping(value = "/register", produces = "application/json",method = RequestMethod.POST)
     public ResponseEntity register(@RequestBody UserDTO user) throws JsonProcessingException {
-        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = homeService.register(user);
+        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = userService.register(user);
         roleService.addUser(user);
         return new ResponseEntity(objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(response.getKey()),response.getValue());
     }

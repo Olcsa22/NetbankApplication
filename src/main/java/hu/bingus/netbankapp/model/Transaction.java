@@ -22,6 +22,7 @@ public class Transaction {
 
     @Column(name = "source_account_id")
     private Long sourceAccountId;
+
     @Column(name = "target_account_id")
     private Long targetAccountId;
 
@@ -31,4 +32,6 @@ public class Transaction {
     @Column(name = "transaction_time")
     private Timestamp transactionTime;
 
+    @Column(name = "deleted")
+    private Boolean deleted;
 }

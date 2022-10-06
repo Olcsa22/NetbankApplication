@@ -15,14 +15,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Service("UserService")
 @Slf4j
 public class UserServiceImpl extends AbstractCriteriaService<User> implements UserService {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public UserServiceImpl() {
+    public UserServiceImpl(ObjectMapper objectMapper) {
         super(User.class);
+        this.objectMapper=objectMapper;
     }
 
     @Override

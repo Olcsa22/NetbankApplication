@@ -7,8 +7,10 @@ import hu.bingus.netbankapp.util.AbstractCriteriaService;
 import hu.bingus.netbankapp.util.ContextProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.query.Query;
+import org.springframework.stereotype.Service;
 
 @Slf4j
+@Service("RoleService")
 public class RoleServiceImpl extends AbstractCriteriaService<Role> implements RoleService {
 
     public RoleServiceImpl() {

@@ -51,13 +51,21 @@ public class AbstractCriteriaService<E> {
 
     }
 
+    public E findById(Long id){
+        cb=getCurrentSession().getCriteriaBuilder();
+        cr=cb.createQuery(entityClass);
+        root = cr.from(entityClass);
+        Predicate predicate = cb.equal(root.get("id"),id);
+        cr.where(predicate);
+        Query<E> query = getCurrentSession().createQuery(cr);
+        E entity = query.getSingleResult();
+        return entity;
+    }
+
     public Session getCurrentSession(){
         return sessionFactory.getCurrentSession();
     }
 
-    @Bean
-    public ObjectMapper getObjectMapper(){
-        return new ObjectMapper();
-    }
+
 
 }
