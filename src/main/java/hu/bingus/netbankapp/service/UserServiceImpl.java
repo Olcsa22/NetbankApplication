@@ -11,11 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 @Service("UserService")
 @Slf4j
+@Transactional
 public class UserServiceImpl extends AbstractCriteriaService<User> implements UserService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

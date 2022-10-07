@@ -9,6 +9,7 @@ import hu.bingus.netbankapp.util.AbstractCriteriaService;
 import hu.bingus.netbankapp.util.ContextProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.sql.Timestamp;
@@ -16,6 +17,7 @@ import java.util.AbstractMap;
 import java.util.Calendar;
 
 @Service("TransactionService")
+@Transactional
 public class TransactionServiceImpl extends AbstractCriteriaService<Transaction> implements TransactionService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -33,6 +35,7 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
                 targetAccount.setBalance(targetAccount.getBalance()+ transaction.getAmount());
                 ContextProvider.getBean(AccountServiceImpl.class).getCurrentSession().update(sourceAccount);
                 ContextProvider.getBean(AccountServiceImpl.class).getCurrentSession().update(targetAccount);
+                transaction.setDeleted(false);
                 super.getCurrentSession().saveOrUpdate(transaction);
                 JsonNode node = objectMapper.createObjectNode().put("reason","Sikeres tranzakció végrehajtás.");
                 return new AbstractMap.SimpleEntry<>(node,HttpStatus.OK);
@@ -59,7 +62,9 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
                 Account sourceAccount = ContextProvider.getBean(AccountServiceImpl.class).findById(transaction.getSourceAccountId());
                 Account targetAccount = ContextProvider.getBean(AccountServiceImpl.class).findById(transaction.getTargetAccountId());
                 sourceAccount.setBalance(sourceAccount.getBalance()+transaction.getAmount());
-                targetAccount.setBalance(targetAccount.getBalance()+transaction.getAmount());
+                targetAccount.setBalance(targetAccount.getBalance()-transaction.getAmount());
+                transaction.setDeleted(true);
+                super.getCurrentSession().saveOrUpdate(transaction);
                 ContextProvider.getBean(AccountServiceImpl.class).getCurrentSession().update(sourceAccount);
                 ContextProvider.getBean(AccountServiceImpl.class).getCurrentSession().update(targetAccount);
                 JsonNode node = objectMapper.createObjectNode().put("reason","Tranzakció sztornózva.");
@@ -74,6 +79,7 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
         }
     }
 
+    //A swagger kéri a nevet, de a sima principal miatt mindegy mit írunk be, a bejelentkezett usert fogja nézni.
     public AbstractMap.SimpleEntry<JsonNode, HttpStatus> stornoTransactionClient(Long id, Principal principal) {
         Transaction transaction = super.findById(id);
         if(transaction!=null){
@@ -83,7 +89,12 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
                 JsonNode node = objectMapper.createObjectNode().put("reason","Nem a felhasználóhóz tartozó tranzakció");
                 return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
             }else{
-                return stornoTransaction(id);
+                if(!transaction.getDeleted()) {
+                    return stornoTransaction(id);
+                }else{
+                    JsonNode node = objectMapper.createObjectNode().put("reason","A tranzakció már sztornózva van");
+                    return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+                }
             }
         }else{
             JsonNode node = objectMapper.createObjectNode().put("reason","Nem található tranzakció");
