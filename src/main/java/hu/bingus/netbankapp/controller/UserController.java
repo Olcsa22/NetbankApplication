@@ -3,6 +3,7 @@ package hu.bingus.netbankapp.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.bingus.netbankapp.exceptions.EntityAlreadyExistsException;
 import hu.bingus.netbankapp.model.dto.UserDTO;
 import hu.bingus.netbankapp.service.UserServiceImpl;
 import hu.bingus.netbankapp.service.RoleServiceImpl;
@@ -30,18 +31,26 @@ public class UserController {
     private final ObjectMapper objectMapper;
 
     @RequestMapping(value = "/register", produces = "application/json",method = RequestMethod.POST)
-    public ResponseEntity register(@RequestBody UserDTO user) throws JsonProcessingException {
-        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = userService.register(user);
+    public ResponseEntity register(@RequestBody UserDTO user) throws JsonProcessingException, EntityAlreadyExistsException {
+        Boolean response = userService.register(user);
         roleService.addUser(user);
-        return new ResponseEntity(objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(response.getKey()),response.getValue());
+        if(response){
+            return new ResponseEntity<>("{\"reason\":\"Sikeres regisztráció\"}", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("{\"reason\":\"Sikertelen regisztráció\"}", HttpStatus.BAD_REQUEST);
+        }
     }
 
 
     @RequestMapping(value = "/makeAdmin", produces = "application/json",method = RequestMethod.POST)
     public ResponseEntity makeAdmin(String username){
 
-        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = roleService.addAdmin(username);
-        return new ResponseEntity<>(response.getKey(),response.getValue());
+        Boolean response = roleService.addAdmin(username);
+        if(response){
+            return new ResponseEntity<>("{\"reason\":\"Sikeres adminná tétel\"}", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("{\"reason\":\"Sikertelen adminná tétel\"}", HttpStatus.BAD_REQUEST);
+        }
     }
 
 }

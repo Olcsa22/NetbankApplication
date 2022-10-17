@@ -31,13 +31,14 @@ import java.util.Optional;
 @EnableTransactionManagement
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+
     private final SessionFactory sessionFactory;
 
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
     {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.openSession();
         CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaQuery<User> cr = cb.createQuery(User.class);
         Root<User> root = cr.from(User.class);

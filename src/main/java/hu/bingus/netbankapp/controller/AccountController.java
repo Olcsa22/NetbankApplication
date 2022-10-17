@@ -1,6 +1,9 @@
 package hu.bingus.netbankapp.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import hu.bingus.netbankapp.exceptions.EntityAlreadyExistsException;
+import hu.bingus.netbankapp.exceptions.EntityNotFoundException;
+import hu.bingus.netbankapp.exceptions.UnaccessibleByUserException;
 import hu.bingus.netbankapp.model.Account;
 import hu.bingus.netbankapp.service.AccountServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -27,33 +30,45 @@ public class AccountController {
 
 
     @RequestMapping(value = "/createAccount", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity createAccount(@RequestBody Account account){
-        AbstractMap.SimpleEntry<JsonNode, HttpStatus> response = accountService.addAccount(account);
-        return new ResponseEntity(response.getValue(),response.getValue());
+    public ResponseEntity createAccount(@RequestBody Account account) throws EntityAlreadyExistsException {
+        Boolean response = accountService.addAccount(account);
+        if(response){
+            return new ResponseEntity("\"reason\":\"sikeres mentés!\"",HttpStatus.OK);
+        }else{
+            return new ResponseEntity("\"reason\":\"sikertelen mentés!\"",HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/deleteAccountAdmin", method = RequestMethod.DELETE, produces = "application/json")
-    public ResponseEntity deleteAccountAdmin(@RequestParam Long id){
-        AbstractMap.SimpleEntry<JsonNode, HttpStatus> response = accountService.deleteAccountByIdAdmin(id);
-        return new ResponseEntity(response.getValue(),response.getValue());
+    public ResponseEntity deleteAccountAdmin(@RequestParam Long id) throws EntityNotFoundException {
+        Boolean response = accountService.deleteAccountByIdAdmin(id);
+        if(response){
+            return new ResponseEntity<>("{\"reason\":\"Sikeres törlés\"}", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("{\"reason\":\"Sikertelen törlés\"}",HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/deleteAccountClient", method = RequestMethod.DELETE, produces = "application/json")
-    public ResponseEntity deleteAccountAdmin(@RequestParam Long id, Principal principal){
-        AbstractMap.SimpleEntry<JsonNode, HttpStatus> response = accountService.deleteAccountByIdUser(id, principal);
-        return new ResponseEntity(response.getValue(),response.getValue());
+    public ResponseEntity deleteAccountClient(@RequestParam Long id, Principal principal) throws UnaccessibleByUserException, EntityNotFoundException {
+        Boolean response = accountService.deleteAccountByIdUser(id, principal);
+        if(response){
+            return new ResponseEntity<>("{\"reason\":\"Sikeres törlés\"}", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("{\"reason\":\"Sikertelen törlés\"}",HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/getBalanceClient", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity getBalanceClient(@RequestParam Long id, Principal principal){
-        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response=accountService.getBalanceClient(id,principal);
-        return new ResponseEntity<>(response.getKey(),response.getValue());
+    public ResponseEntity getBalanceClient(@RequestParam Long id, Principal principal) throws UnaccessibleByUserException, EntityNotFoundException {
+        Long response=accountService.getBalanceClient(id,principal);
+        return new ResponseEntity<>("{\"balance\":"+response.toString()+"}",HttpStatus.OK);
     }
 
     @RequestMapping(value = "/getBalanceAdmin", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity getBalanceAdmin(@RequestParam Long id){
-        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response=accountService.getBalance(id);
-        return new ResponseEntity<>(response.getKey(),response.getValue());
+    public ResponseEntity getBalanceAdmin(@RequestParam Long id) throws EntityNotFoundException {
+        Long response=accountService.getBalance(id);
+        return new ResponseEntity<>("{\"balance\":"+response.toString()+"}",HttpStatus.OK);
     }
 
 }

@@ -2,6 +2,8 @@ package hu.bingus.netbankapp.controller;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
+import hu.bingus.netbankapp.exceptions.EntityNotFoundException;
+import hu.bingus.netbankapp.exceptions.UnaccessibleByUserException;
 import hu.bingus.netbankapp.model.Transaction;
 import hu.bingus.netbankapp.service.TransactionServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -27,22 +29,34 @@ public class TransactionController {
 
 
     @RequestMapping(value = "/createTransaction", method = RequestMethod.PUT, produces = "application/json")
-    public ResponseEntity createTransaction(@RequestBody Transaction transaction){
-        AbstractMap.SimpleEntry<JsonNode, HttpStatus> response = transactionService.createTransaction(transaction);
-        return new ResponseEntity<>(response.getKey(),response.getValue());
+    public ResponseEntity createTransaction(@RequestBody Transaction transaction) throws EntityNotFoundException, UnaccessibleByUserException {
+        Boolean response = transactionService.createTransaction(transaction);
+        if(response){
+            return new ResponseEntity<>("{\"reason\":\"Sikeres tranzakció létrehozás\"}", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("{\"reason\":\"Sikertelen tranzakció létrehozás\"}",HttpStatus.BAD_REQUEST);
+        }
     }
 
 
     @RequestMapping(value = "/stornoTransactionAdmin", method = RequestMethod.DELETE, produces = "application/json")
-    public ResponseEntity stornoTransactionAdmin(@RequestParam Long id){
-        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = transactionService.stornoTransaction(id);
-        return new ResponseEntity(response.getKey(),response.getValue());
+    public ResponseEntity stornoTransactionAdmin(@RequestParam Long id) throws EntityNotFoundException, UnaccessibleByUserException {
+        Boolean response = transactionService.stornoTransaction(id);
+        if(response){
+            return new ResponseEntity<>("{\"reason\":\"Sikeres tranzakció sztornózás\"}", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("{\"reason\":\"Sikertelen tranzakció sztornózás\"}",HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/stornoTransactionClient", method = RequestMethod.DELETE, produces = "application/json")
-    public ResponseEntity stornoTransactionClient(@RequestParam Long id, Principal principal){
-        AbstractMap.SimpleEntry<JsonNode,HttpStatus> response = transactionService.stornoTransactionClient(id, principal);
-        return new ResponseEntity(response.getKey(),response.getValue());
+    public ResponseEntity stornoTransactionClient(@RequestParam Long id, Principal principal) throws EntityNotFoundException, UnaccessibleByUserException {
+        Boolean response = transactionService.stornoTransactionClient(id, principal);
+        if(response){
+            return new ResponseEntity<>("{\"reason\":\"Sikeres tranzakció sztornózás\"}", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("{\"reason\":\"Sikertelen tranzakció sztornózás\"}",HttpStatus.BAD_REQUEST);
+        }
     }
 
 }

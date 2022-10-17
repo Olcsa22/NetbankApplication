@@ -1,6 +1,5 @@
 package hu.bingus.netbankapp.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.bingus.netbankapp.model.Role;
 import hu.bingus.netbankapp.model.User;
@@ -9,11 +8,8 @@ import hu.bingus.netbankapp.util.AbstractCriteriaService;
 import hu.bingus.netbankapp.util.ContextProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.query.Query;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.AbstractMap;
 
 @Slf4j
 @Service("RoleService")
@@ -42,7 +38,7 @@ public class RoleServiceImpl extends AbstractCriteriaService<Role> implements Ro
     }
 
     @Override
-    public AbstractMap.SimpleEntry<JsonNode, HttpStatus> addAdmin(String user) {
+    public Boolean addAdmin(String user) {
         User user1 = ContextProvider.getBean(UserService.class).findByUsername(user);
         try {
             Query query = getCurrentSession().createSQLQuery(
@@ -53,12 +49,10 @@ public class RoleServiceImpl extends AbstractCriteriaService<Role> implements Ro
             query.setParameter("userId1",user1.getId());
             query.executeUpdate();
 
-            JsonNode node = mapper.createObjectNode().put("reason","Sikeres adminná tétel");
-            return  new AbstractMap.SimpleEntry<>(node,HttpStatus.OK);
+            return Boolean.TRUE;
         }catch (Exception e){
             log.error("RoleServiceImpl - addAdmin: "+e+", username: "+user);
-            JsonNode node = mapper.createObjectNode().put("reason","Sikertelen adminná tétel");
-            return  new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+            return Boolean.FALSE;
         }
     }
 }

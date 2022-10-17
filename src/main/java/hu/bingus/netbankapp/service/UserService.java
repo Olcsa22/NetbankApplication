@@ -1,13 +1,12 @@
 package hu.bingus.netbankapp.service;
 
+import hu.bingus.netbankapp.exceptions.EntityAlreadyExistsException;
 import hu.bingus.netbankapp.model.User;
 import hu.bingus.netbankapp.model.dto.UserDTO;
 
-import java.util.AbstractMap;
-
 public interface UserService {
 
-    public AbstractMap.SimpleEntry register(UserDTO user);
+    public Boolean register(UserDTO user) throws EntityAlreadyExistsException;
 
     public User findByUsername(String username);
 

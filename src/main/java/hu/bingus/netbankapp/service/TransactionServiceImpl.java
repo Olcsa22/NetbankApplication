@@ -2,6 +2,8 @@ package hu.bingus.netbankapp.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.bingus.netbankapp.exceptions.EntityNotFoundException;
+import hu.bingus.netbankapp.exceptions.UnaccessibleByUserException;
 import hu.bingus.netbankapp.model.Account;
 import hu.bingus.netbankapp.model.Transaction;
 import hu.bingus.netbankapp.model.User;
@@ -26,7 +28,7 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
         super(Transaction.class);
     }
 
-    public AbstractMap.SimpleEntry<JsonNode, HttpStatus> createTransaction(Transaction transaction){
+    public Boolean createTransaction(Transaction transaction) throws EntityNotFoundException, UnaccessibleByUserException {
         Account sourceAccount = ContextProvider.getBean(AccountServiceImpl.class).findById(transaction.getSourceAccountId());
         Account targetAccount = ContextProvider.getBean(AccountServiceImpl.class).findById(transaction.getTargetAccountId());
         if(sourceAccount != null && targetAccount != null){
@@ -37,19 +39,16 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
                 ContextProvider.getBean(AccountServiceImpl.class).getCurrentSession().update(targetAccount);
                 transaction.setDeleted(false);
                 super.getCurrentSession().saveOrUpdate(transaction);
-                JsonNode node = objectMapper.createObjectNode().put("reason","Sikeres tranzakció végrehajtás.");
-                return new AbstractMap.SimpleEntry<>(node,HttpStatus.OK);
+                return Boolean.TRUE;
             }else{
-                JsonNode node = objectMapper.createObjectNode().put("reason","Hiba a tranzakció végrehajtása közben. Nincs elég fedezet.");
-                return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+                throw new UnaccessibleByUserException("Hiba a tranzakció végrehajtása közben. Nincs elég fedezet");
             }
         }else{
-            JsonNode node = objectMapper.createObjectNode().put("reason","Hiba a tranzakció végrehajtása közben. Hibás fiókok megadva.");
-            return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+            throw new EntityNotFoundException("Hiba a tranzakció végrehajtása közben. Hibás fiók megadva");
         }
     }
 
-    public AbstractMap.SimpleEntry<JsonNode, HttpStatus> stornoTransaction(Long id){
+    public Boolean stornoTransaction(Long id) throws EntityNotFoundException, UnaccessibleByUserException {
         Transaction transaction = super.findById(id);
         if(transaction!=null){
 
@@ -67,38 +66,32 @@ public class TransactionServiceImpl extends AbstractCriteriaService<Transaction>
                 super.getCurrentSession().saveOrUpdate(transaction);
                 ContextProvider.getBean(AccountServiceImpl.class).getCurrentSession().update(sourceAccount);
                 ContextProvider.getBean(AccountServiceImpl.class).getCurrentSession().update(targetAccount);
-                JsonNode node = objectMapper.createObjectNode().put("reason","Tranzakció sztornózva.");
-                return new AbstractMap.SimpleEntry<>(node,HttpStatus.OK);
+                return Boolean.TRUE;
             }else{
-                JsonNode node = objectMapper.createObjectNode().put("reason","A tranzakció 30 napon túl esik, nem sztornózható.");
-                return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+                throw new UnaccessibleByUserException("A tranzakció 30 napon túl esik, nem sztornózható.");
             }
         }else{
-            JsonNode node = objectMapper.createObjectNode().put("reason", "Hiba a tranzakció sztornózásakor. Nem létező tranzakció.");
-            return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+            throw new EntityNotFoundException("Hiba a tranzakció sztornózásakor. Nem létező tranzakció.");
         }
     }
 
     //A swagger kéri a nevet, de a sima principal miatt mindegy mit írunk be, a bejelentkezett usert fogja nézni.
-    public AbstractMap.SimpleEntry<JsonNode, HttpStatus> stornoTransactionClient(Long id, Principal principal) {
+    public Boolean stornoTransactionClient(Long id, Principal principal) throws EntityNotFoundException, UnaccessibleByUserException {
         Transaction transaction = super.findById(id);
         if(transaction!=null){
             Account account = ContextProvider.getBean(AccountServiceImpl.class).findById(transaction.getSourceAccountId());
             User user = ContextProvider.getBean(UserServiceImpl.class).findByUsername(principal.getName());
             if(user.getId() != account.getUserId()){
-                JsonNode node = objectMapper.createObjectNode().put("reason","Nem a felhasználóhóz tartozó tranzakció");
-                return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+                throw new UnaccessibleByUserException("Nem a felhasználóhóz tartozó tranzakció");
             }else{
                 if(!transaction.getDeleted()) {
                     return stornoTransaction(id);
                 }else{
-                    JsonNode node = objectMapper.createObjectNode().put("reason","A tranzakció már sztornózva van");
-                    return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+                    throw new UnaccessibleByUserException("A tranzakció már sztornózva van.");
                 }
             }
         }else{
-            JsonNode node = objectMapper.createObjectNode().put("reason","Nem található tranzakció");
-            return new AbstractMap.SimpleEntry<>(node,HttpStatus.BAD_REQUEST);
+            throw new EntityNotFoundException("Nem található tranzakció.");
         }
 
     }

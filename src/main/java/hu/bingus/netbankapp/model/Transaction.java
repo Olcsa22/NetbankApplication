@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 @Table(name = "transactions")
 @Entity
 @Data
-public class Transaction {
+public class Transaction  {
 
     @Id
     @Column(name = "id")
@@ -34,4 +34,5 @@ public class Transaction {
 
     @Column(name = "deleted")
     private Boolean deleted;
+
 }

@@ -1,14 +1,14 @@
 package hu.bingus.netbankapp.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.bingus.netbankapp.exceptions.EntityAlreadyExistsException;
 import hu.bingus.netbankapp.model.Account;
 import hu.bingus.netbankapp.model.User;
 import hu.bingus.netbankapp.model.dto.UserDTO;
 import hu.bingus.netbankapp.util.AbstractCriteriaService;
 import hu.bingus.netbankapp.util.ContextProvider;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,21 +27,15 @@ public class UserServiceImpl extends AbstractCriteriaService<User> implements Us
     }
 
     @Override
-    public AbstractMap.SimpleEntry register(UserDTO user) {
+    public Boolean register(UserDTO user) throws EntityAlreadyExistsException {
         Map<String, Object> params = new HashMap<>();
         params.put("username",user.getUsername());
         List<User> usersWithUsername = getWhereEq(params);
 
         if(usersWithUsername!=null){
-            JsonNode json = objectMapper.createObjectNode().put("reason","Ezzel a felhasználónévvel már létezik felhasználó");
-            AbstractMap.SimpleEntry<JsonNode,HttpStatus> entry = new AbstractMap.SimpleEntry<>(json,HttpStatus.BAD_REQUEST);
-
-            return entry;
+            throw new EntityAlreadyExistsException("Már létezik ezzel a névvel felhasználó!");
         }else if(!user.getPassword().equals(user.getPasswordAgain())){
-            JsonNode json = objectMapper.createObjectNode().put("reason","A jelszavak nem egyeznek");
-            AbstractMap.SimpleEntry<JsonNode,HttpStatus> entry = new AbstractMap.SimpleEntry<>(json,HttpStatus.BAD_REQUEST);
-
-            return entry;
+            throw new BadCredentialsException("A jelszavak nem egyeznek!");
         }else{
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             User userToSave = new User();
@@ -64,13 +58,10 @@ public class UserServiceImpl extends AbstractCriteriaService<User> implements Us
 
             }catch (Exception e){
                 log.error("HomeServiceImpl - register: "+e);
-                JsonNode json = objectMapper.createObjectNode().put("reason","A hiba a regisztráció közben!");
-                AbstractMap.SimpleEntry<JsonNode,HttpStatus> entry = new AbstractMap.SimpleEntry<>(json,HttpStatus.INTERNAL_SERVER_ERROR);
-                return entry;
+                return Boolean.FALSE;
             }
-            JsonNode json = objectMapper.createObjectNode().put("reason","Sikeres regisztráció!");
-            AbstractMap.SimpleEntry<JsonNode,HttpStatus> entry = new AbstractMap.SimpleEntry<>(json,HttpStatus.OK);
-            return entry;
+
+            return Boolean.TRUE;
         }
     }
 

@@ -14,7 +14,7 @@ import java.util.Set;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class Role {
+public class Role  {
 
     @Id
     @Column(name = "id")

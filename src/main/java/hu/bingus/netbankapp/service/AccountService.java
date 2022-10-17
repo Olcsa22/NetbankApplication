@@ -1,15 +1,22 @@
 package hu.bingus.netbankapp.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import hu.bingus.netbankapp.exceptions.EntityAlreadyExistsException;
+import hu.bingus.netbankapp.exceptions.EntityNotFoundException;
+import hu.bingus.netbankapp.exceptions.UnaccessibleByUserException;
 import hu.bingus.netbankapp.model.Account;
-import org.springframework.http.HttpStatus;
 
-import java.util.AbstractMap;
+import java.security.Principal;
 
 public interface AccountService {
 
-    AbstractMap.SimpleEntry<JsonNode, HttpStatus> addAccount(Account account);
+    Boolean addAccount(Account account) throws EntityAlreadyExistsException;
 
-    AbstractMap.SimpleEntry<JsonNode, HttpStatus> deleteAccountByIdAdmin(Long id);
+    Boolean deleteAccountByIdAdmin(Long id) throws EntityNotFoundException;
+
+    Boolean deleteAccountByIdUser(Long id, Principal principal) throws UnaccessibleByUserException, EntityNotFoundException;
+
+    Long getBalance(Long id) throws EntityNotFoundException;
+
+    public Long getBalanceClient(Long id, Principal principal) throws EntityNotFoundException, UnaccessibleByUserException;
 
 }

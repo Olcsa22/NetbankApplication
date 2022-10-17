@@ -14,7 +14,7 @@ import java.util.Set;
 @Table(name = "users")
 @Entity
 @Data
-public class User {
+public class User{
 
     @Id
     @Column(name = "id")
@@ -34,5 +34,4 @@ public class User {
             inverseJoinColumns = {@JoinColumn(name = "role_id")}
     )
     private Set<Role> roles = new HashSet<Role>();
-
 }
